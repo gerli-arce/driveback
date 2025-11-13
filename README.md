@@ -1,79 +1,92 @@
-# Plataforma de Mototaxis - Pichanaki
+# MotoGo API (Laravel)
 
-Repositorio con backend Laravel y frontend React para iniciar un flujo tipo Uber entre pasajeros y conductores de mototaxi en Pichanaki, Peru.
+Back-end unificado para gestionar el flujo tipo Uber entre pasajeros y conductores. Expone únicamente endpoints REST bajo `/api`, listos para ser consumidos por clientes web, móviles o una SPA externa.
 
-## Backend (Laravel API)
+## Requisitos
 
-Ubicacion: `backend/`
+- PHP 8.2+ y Composer
+- MySQL 8+ (configurable en `.env`)
 
-1. Instalar dependencias y llaves:
+## Instalación
 
-   ```bash
-   cd backend
-   composer install
-   cp .env.example .env
-   php artisan key:generate
-   php artisan jwt:secret
-   ```
+```bash
+cp .env.example .env
+composer install
+php artisan key:generate
+php artisan jwt:secret
+# crea la base `drive` (o la que definas) en MySQL y ajusta las variables DB_*
+php artisan migrate --seed
+```
 
-2. Por defecto se usa SQLite. Puedes dejarlo asi o configurar MySQL/PostgreSQL en `.env`.
+Arranca el servidor de desarrollo:
 
-3. Migrar y sembrar datos demo (pasajero y conductor):
+```bash
+php artisan serve   # http://localhost:8000
+```
 
-   ```bash
-   php artisan migrate --seed
-   ```
+El endpoint raíz (`GET /`) responde un JSON con la versión del API y un mensaje de bienvenida.
 
-4. Levantar la API en `http://localhost:8000`:
+## Dominio y roles
 
-   ```bash
-   php artisan serve
-   ```
+| Rol       | Descripción                                                                 |
+| --------- | --------------------------------------------------------------------------- |
+| `viewer`  | Usuario público (solo ve /).                                                |
+| `passenger` | Cliente que crea solicitudes de viaje bajo `/api/passenger/...`.         |
+| `driver`  | Conductor que gestiona disponibilidad y viajes bajo `/api/driver/...`.     |
+| `admin`   | Operador que controla choferes, clientes, rutas y viajes desde `/api/admin`.|
 
-### Endpoints clave
+### Modelos principales
 
-| Ruta | Metodo | Descripcion |
-| --- | --- | --- |
-| `/api/auth/register` | POST | Registro con rol pasajero o conductor |
-| `/api/auth/login` | POST | Inicio de sesion (retorna JWT) |
-| `/api/passenger/trips` | GET/POST | Listar y crear viajes |
-| `/api/passenger/trips/{trip}/rate` | POST | Calificar conductor |
-| `/api/driver/availability` | POST | Estado disponible del conductor |
-| `/api/driver/trips/available` | GET | Viajes pendientes |
-| `/api/driver/trips/{trip}/accept|reject|start|complete` | POST | Flujo completo del viaje |
+- `User` (roles, disponibilidad, teléfono).
+- `Trip` (pasajero, conductor, origen/destino, precio, estados `requested/accepted/in_progress/completed/cancelled`).  
+- `TransportRoute` (catálogo de rutas con precios/distancias).
 
-El middleware `role` asegura permisos por tipo de usuario y todos los endpoints requieren `Authorization: Bearer <token>`.
+## Endpoints clave
 
-## Frontend (React SPA)
+### Autenticación (`/api/auth/...`)
 
-Ubicacion: `frontend/`
+| Método | Ruta        | Descripción                                      |
+| ------ | ----------- | ------------------------------------------------ |
+| POST   | `/register` | Alta de pasajero o conductor (retorna JWT).      |
+| POST   | `/login`    | Inicio de sesión (retorna JWT).                  |
+| POST   | `/logout`   | Invalida el token en curso.                      |
+| GET    | `/me`       | Perfil del usuario autenticado.                  |
 
-1. Copia las variables y ajusta la URL de la API si aplica:
+### Pasajeros (`role:passenger`)
 
-   ```bash
-   cd frontend
-   cp .env.example .env
-   ```
+- `GET /api/passenger/trips` – listado/historial.
+- `POST /api/passenger/trips` – crea una solicitud.
+- `POST /api/passenger/trips/{trip}/rate` – califica viajes completados.
 
-2. Instala dependencias y levanta Vite:
+### Conductores (`role:driver`)
 
-   ```bash
-   npm install
-   npm run dev
-   ```
+- `POST /api/driver/availability` – cambia disponibilidad.
+- `GET /api/driver/trips/available` – solicitudes pendientes (excluye rechazadas).
+- `GET /api/driver/trips/assigned` – viajes aceptados/en progreso/completados.
+- `POST /api/driver/trips/{trip}/accept|reject|start|complete` – flujo completo.
 
-3. La SPA integra:
-   - Landing page.
-   - Formularios de registro e inicio de sesion (conservan JWT y perfil).
-   - Panel pasajero: solicitudes, seguimiento y calificacion.
-   - Panel conductor: disponibilidad, aceptacion/rechazo, inicio y cierre del viaje.
-   - Contenedor listo para mapas (Leaflet, Google Maps, etc.).
+### Administración (`role:admin`)
 
-## Flujo sugerido
+- `GET /api/admin/dashboard` – métricas de usuarios, viajes y rutas.
+- `GET /api/admin/users?role=driver|passenger` – listado filtrado de usuarios.
+- `PATCH /api/admin/users/{user}` – actualiza rol/disponibilidad/datos.
+- `GET /api/admin/trips?status=...` – viajes filtrables.
+- `PATCH /api/admin/trips/{trip}` – fuerza estado, precio o chofer asignado.
+- `GET /api/admin/routes` – catálogo de rutas operativas.
+- `POST/PUT/DELETE /api/admin/routes/{id}` – CRUD completo de rutas.
 
-1. Abre `http://localhost:5173`.
-2. Registrate como pasajero y crea un viaje (o usa `pasajero@example.com / password`).
-3. En otra pestana inicia sesion como conductor (`conductor@example.com / password`), ponte disponible y acepta el viaje.
-4. Completa el recorrido y califica para cerrar el flujo basico.
+## Datos seed
 
-Listo: tienes la base para sumar pagos, mapas reales y reglas de asignacion mas avanzadas.
+Después de `php artisan migrate --seed` tendrás:
+
+- Pasajero demo: `pasajero@example.com / password`
+- Conductor demo: `conductor@example.com / password`
+- Administrador: `admin@conorld.com / asucar123YON`
+
+Use estos usuarios para probar los endpoints protegidos indicando `Authorization: Bearer <token>`.
+
+## Extra
+
+- Tests básicos disponibles (`php artisan test`).
+- El proyecto ya incluye middleware `role` y recursos (`UserResource`, `TripResource`, `TransportRouteResource`) para respuestas consistentes.
+- Para cualquier cliente (React, React Native, etc.) basta con consumir las rutas anteriores. No hay frontend empaquetado dentro de este repositorio.*** End Patch
