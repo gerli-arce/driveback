@@ -50,7 +50,9 @@ El endpoint raíz (`GET /`) responde un JSON con la versión del API y un mensaj
 | POST   | `/register` | Alta de pasajero o conductor (retorna JWT).      |
 | POST   | `/login`    | Inicio de sesión (retorna JWT).                  |
 | POST   | `/logout`   | Invalida el token en curso.                      |
-| GET    | `/me`       | Perfil del usuario autenticado.                  |
+| GET    | `/me`       | Perfil básico del usuario autenticado.           |
+| GET    | `/profile`  | Perfil completo con datos de contacto y empresa. |
+| PATCH  | `/profile`  | Actualiza perfil y datos del usuario (campo `password` acepta nueva clave). |
 
 ### Pasajeros (`role:passenger`)
 
@@ -79,11 +81,15 @@ El endpoint raíz (`GET /`) responde un JSON con la versión del API y un mensaj
 
 Después de `php artisan migrate --seed` tendrás:
 
-- Pasajero demo: `pasajero@example.com / password`
-- Conductor demo: `conductor@example.com / password`
-- Administrador: `admin@conorld.com / asucar123YON`
+- Administrador demo: `admin@conorld.com / asucar123YON`
+- Driver (conductor) demo: `drive@conorld.com / asucar123YON`
+- Cliente (pasajero) demo: `client@conorld.com / asucar123YON`
 
 Use estos usuarios para probar los endpoints protegidos indicando `Authorization: Bearer <token>`.
+
+### Perfil completo
+- `GET /api/auth/profile` devuelve los datos del usuario con los campos opcionales `company`, `username`, `first_name`, `last_name`, `address`, `city`, `postal_code`, `country`, `about`, `website` y `bio`.
+- `PATCH /api/auth/profile` acepta los mismos campos para actualizar y también `password` (nuevo valor) junto a `current_password` si quieres validar la clave anterior; el `password` debe tener al menos 8 caracteres.
 
 ## Extra
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -47,6 +48,25 @@ class AuthController extends Controller
     public function me(): UserResource
     {
         return UserResource::make(auth('api')->user());
+    }
+
+    public function profile(): UserResource
+    {
+        return UserResource::make(auth('api')->user());
+    }
+
+    public function updateProfile(UpdateProfileRequest $request): UserResource
+    {
+        $data = $request->safe()->except(['current_password', 'password']);
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->input('password'));
+        }
+
+        $user = $request->user();
+        $user->update($data);
+
+        return UserResource::make($user->fresh());
     }
 
     protected function respondWithToken(string $token, User $user, int $status = 200): JsonResponse

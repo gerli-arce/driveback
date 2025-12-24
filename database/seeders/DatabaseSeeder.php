@@ -19,24 +19,46 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $passenger = User::updateOrCreate(
-            ['email' => 'pasajero@example.com'],
+            ['email' => 'client@conorld.com'],
             [
-                'name' => 'Pasajero Demo',
+                'name' => 'Cliente Demo',
                 'phone' => '999-111-222',
                 'role' => 'passenger',
                 'is_available' => false,
-                'password' => Hash::make('password'),
+                'company' => 'Client Tours Inc.',
+                'username' => 'client.demo',
+                'first_name' => 'Cliente',
+                'last_name' => 'Demo',
+                'address' => 'Av. Central 456',
+                'city' => 'Lima',
+                'postal_code' => '15000',
+                'country' => 'Perú',
+                'about' => 'Usuario de prueba que solicita viajes frecuentes hacia el centro financiero.',
+                'website' => 'https://client-demo.conorld.com',
+                'bio' => 'Aplica descuentos corporativos y siempre reporta calidad en el servicio.',
+                'password' => Hash::make('asucar123YON'),
             ]
         );
 
         $driver = User::updateOrCreate(
-            ['email' => 'conductor@example.com'],
+            ['email' => 'drive@conorld.com'],
             [
-                'name' => 'Conductor Demo',
+                'name' => 'Driver Demo',
                 'phone' => '999-333-444',
                 'role' => 'driver',
                 'is_available' => true,
-                'password' => Hash::make('password'),
+                'company' => 'Conorld Mobility',
+                'username' => 'driver.demo',
+                'first_name' => 'Driver',
+                'last_name' => 'Demo',
+                'address' => 'Av. Principal 123',
+                'city' => 'Ciudad de México',
+                'postal_code' => '01234',
+                'country' => 'Mexico',
+                'about' => 'Me gusta ofrecer un servicio puntual y seguro a los pasajeros.',
+                'website' => 'https://mi-sitio.com',
+                'bio' => 'Soy conductor en la plataforma y me especializo en viajes al aeropuerto.',
+                'password' => Hash::make('asucar123YON'),
             ]
         );
 
@@ -47,6 +69,17 @@ class DatabaseSeeder extends Seeder
                 'phone' => '999-000-111',
                 'role' => 'admin',
                 'is_available' => true,
+                'company' => 'Conorld Operations',
+                'username' => 'admin.conorld',
+                'first_name' => 'Admin',
+                'last_name' => 'Conorld',
+                'address' => 'Av. Ejecutiva 1000',
+                'city' => 'Lima',
+                'postal_code' => '15001',
+                'country' => 'Perú',
+                'about' => 'Administra rutas y usuarios con foco en calidad y seguridad.',
+                'website' => 'https://admin.conorld.com',
+                'bio' => 'Perfil administrativo con acceso completo a todas las métricas y operaciones.',
                 'password' => Hash::make('asucar123YON'),
             ]
         );
